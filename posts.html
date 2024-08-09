@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Posts</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        form input,
+        form textarea,
+        form input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        form input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        form input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        #posts {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-gap: 20px;
+        }
+
+        .card {
+            background-color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+
+        .card textarea {
+            width: 90%;
+            min-height: 100px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+            font-size: 16px;
+        }
+
+        .card button,
+        button {
+            padding: 8px 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            width: fit-content;
+        }
+
+        .card button:hover {
+            background-color: #d32f2f;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 5px;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .modal-btn-container {
+            text-align: right;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="form" action="">
+        <h3>Add post</h3>
+        <input id="title" type="text" placeholder="Enter title of post">
+        <textarea name="" id="content" placeholder="Enter content of your post"></textarea>
+        <input type="submit" value="Add post">
+    </form>
+    <div id="posts"></div>
+    <div id="modal"></div>
+</body>
+
+<script>
+    const baseUrl = "http://127.0.0.1:8000/blogs";
+    const form = document.getElementById("form");
+    const postsContainer = document.getElementById("posts");
+
+    const jwt = localStorage.getItem("jwt");
+    const csrfToken = "";
+
+    if (!jwt) {
+        alert("Please login!");
+        window.location.href = "login.html";
+    }
+
+    const deletePost = async (postId) => {
+        try {
+            const res = await fetch(`${baseUrl}/posts/${postId}/`, {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwt}`,
+                    "X-CSRFToken": csrfToken
+                }
+            })
+            const data = await res.json();
+            alert(data.message);
+            fetchPosts();
+        } catch(err) {
+            console.log("Error is deleting", err);
+        }
+    }
+
+    const displayPosts = (posts) => {
+        postsContainer.innerHTML = "";
+
+        posts.forEach(post => {
+            const card = document.createElement("div");
+            card.setAttribute("class", "card");
+
+            const title = document.createElement("h3");
+            title.textContent = post.title;
+
+            const content = document.createElement("textarea");
+            content.readOnly = true;
+            content.textContent = post.content;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.textContent = "Delete";
+            deleteButton.addEventListener("click", () => {
+                deletePost(post.id);
+            });
+
+            const editBtn = document.createElement("button");
+            editBtn.textContent = "Edit";
+            // editBtn.addEventListener("click", () => {
+            //     openModal(post);
+            // });
+
+            card.append(title, content, editBtn, deleteButton);
+            postsContainer.append(card);
+        });
+    }
+
+    const fetchPosts = async () => {
+        try {
+            const res = await fetch(`${baseUrl}/posts/all/`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwt}`
+                }
+            })
+            const data = await res.json();
+            displayPosts(data.data)
+        } catch (err) {
+            console.log(err, "Error is fetching posts!")
+        }
+    }
+
+    const createPost = async () => {
+        event.preventDefault();
+        const title = document.getElementById("title").value;
+        const content = document.getElementById("content").value;
+
+        if (!title || !content) {
+            alert("Post title or content can't be empty");
+            return
+        }
+
+        try {
+            const res = await fetch(`${baseUrl}/posts/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${jwt}`
+                },
+                body: JSON.stringify({ title, content })
+            })
+
+            if (res.ok) {
+                const data = await res.json();
+                alert(data.message);
+                fetchPosts();
+            } else {
+                alert("Some issue in creating post! Please try again.")
+            }
+        } catch (err) {
+            console.log("Error in create post", err)
+        }
+    }
+
+    form.addEventListener("submit", createPost);
+    fetchPosts();
+</script>
+
+</html>

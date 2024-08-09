@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="form" action="">
+        <h3>Please Register</h3>
+        <input id="username" type="text" placeholder="Enter username">
+        <input id="password" type="password" placeholder="Enter password">
+        <select name="role" id="user-type">
+            <option value="">Select user type</option>
+            <option value="reader">Reader</option>
+            <option value="author">Author</option>
+        </select>
+        <input type="submit" value="Register">
+    </form>
+</body>
+
+<script>
+    const baseUrl = "http://127.0.0.1:8000/blogs";
+    const form = document.getElementById("form");
+
+    const signUp = async (event) => {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const userType = document.getElementById("user-type").value;
+
+        if (!username || !password || !userType) {
+            alert("Please enter all details");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${baseUrl}/register/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, user_type: userType, password })
+            })
+
+            const data = await res.json();
+            if (data?.username?.length) {
+                alert(data.username[0] + " Please login!");
+            } else {
+                alert(data.message + ". Please login!");
+            }
+            window.location.href = "login.html"
+
+        } catch (err) {
+            console.log(err, "Error in signup function")
+        }
+    }
+
+    form.addEventListener("submit", signUp)
+</script>
+
+</html>

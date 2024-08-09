@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        form {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            width: 300px;
+        }
+
+        input[type="text"],
+        input[type="password"],
+        input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        input[type="submit"] {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+
+<body>
+    <form id="form" action="">
+        <h3>Please Login</h3>
+        <input id="username" type="text" placeholder="Enter username">
+        <input id="password" type="password" placeholder="Enter password">
+        <input type="submit" value="Login">
+    </form>
+</body>
+
+<script>
+    const baseUrl = "http://127.0.0.1:8000/blogs";
+    const form = document.getElementById("form");
+
+    const login = async (event) => {
+        event.preventDefault();
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+
+        if (!username || !password) {
+            alert("Please enter all details");
+            return;
+        }
+
+        try {
+            const res = await fetch(`${baseUrl}/login/`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ username, password })
+            })
+            const data = await res.json();
+            if (data.detail) {
+                alert(data.detail);
+            } else {
+                alert(data.message);
+                localStorage.setItem("jwt", data.jwt);
+                window.location.href = "posts.html";
+            }
+        } catch(err) {
+            console.log("Error in login", err)
+        }
+
+    }
+
+    form.addEventListener("submit", login)
+</script>
+
+</html>
